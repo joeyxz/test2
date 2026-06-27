@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RomM</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --card: #16213e;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --text: #e0e0e0;
+      --muted: #888;
+      --focus-border: 3px solid var(--accent);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Samsung Sharp Sans', 'Samsung One', Arial, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── Setup Screen ── */
+    #setup-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 24px;
+      padding: 60px;
+    }
+
+    #setup-screen h1 { font-size: 48px; color: var(--accent); }
+    #setup-screen p  { color: var(--muted); font-size: 22px; }
+
+    .setup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 600px;
+    }
+
+    .setup-form label {
+      font-size: 20px;
+      color: var(--muted);
+    }
+
+    .setup-form input {
+      background: var(--surface);
+      border: 2px solid #333;
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 22px;
+      padding: 14px 18px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .setup-form input:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      cursor: pointer;
+      font-size: 22px;
+      padding: 16px 32px;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:focus, .btn.focused {
+      outline: var(--focus-border);
+      outline-offset: 3px;
+      background: #c73550;
+    }
+
+    .btn-secondary {
+      background: var(--accent2);
+    }
+
+    .btn-secondary:focus, .btn-secondary.focused {
+      background: #1a5090;
+    }
+
+    /* ── Main App ── */
+    #app { display: none; height: 100vh; flex-direction: column; }
+
+    /* Header */
+    #header {
+      display: flex;
+      align-items: center;
+      padding: 16px 40px;
+      background: var(--surface);
+      gap: 24px;
+      flex-shrink: 0;
+    }
+
+    #header h1 { font-size: 32px; color: var(--accent); min-width: 120px; }
+
+    #search-bar {
+      flex: 1;
+      background: var(--card);
+      border: 2px solid #333;
+      border-radius: 30px;
+      color: var(--text);
+      font-size: 20px;
+      padding: 10px 24px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #search-bar:focus { border-color: var(--accent); }
+
+    #header-info {
+      font-size: 18px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* Breadcrumb */
+    #breadcrumb {
+      padding: 10px 40px;
+      font-size: 18px;
+      color: var(--muted);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    #breadcrumb span { color: var(--text); }
+
+    /* Content area */
+    #content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 280px;
+      background: var(--surface);
+      padding: 20px 0;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-item {
+      padding: 14px 28px;
+      font-size: 20px;
+      cursor: pointer;
+      border-left: 4px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .sidebar-item.focused, .sidebar-item:hover {
+      background: var(--card);
+      border-left-color: var(--accent);
+      color: #fff;
+    }
+
+    .sidebar-item.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    /* Grid */
+    #grid-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 32px;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 3px solid transparent;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card.focused {
+      border-color: var(--accent);
+      transform: scale(1.04);
+      box-shadow: 0 0 24px rgba(233,69,96,0.4);
+      z-index: 1;
+      position: relative;
+    }
+
+    .card-cover {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      background: var(--accent2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+
+    .card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-cover .placeholder {
+      font-size: 48px;
+      line-height: 1;
+    }
+
+    .card-info {
+      padding: 10px 12px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Detail panel */
+    #detail-panel {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #detail-panel.visible { display: flex; }
+
+    .detail-inner {
+      background: var(--surface);
+      border-radius: 16px;
+      width: 900px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .detail-cover {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--accent2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+    }
+
+    .detail-cover img { width: 100%; height: 100%; object-fit: cover; }
+
+    .detail-info {
+      padding: 32px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-title { font-size: 30px; font-weight: bold; }
+    .detail-platform { font-size: 20px; color: var(--accent); }
+
+    .detail-meta {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Status bar */
+    #status-bar {
+      padding: 8px 40px;
+      font-size: 17px;
+      color: var(--muted);
+      background: var(--surface);
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    /* Loading */
+    #loading {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      font-size: 24px;
+    }
+
+    #loading.visible { display: flex; }
+
+    .spinner {
+      width: 60px; height: 60px;
+      border: 5px solid #333;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 30px;
+      font-size: 20px;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    #toast.show { opacity: 1; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 80px 0;
+      color: var(--muted);
+      font-size: 22px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Setup Screen -->
+<div id="setup-screen">
+  <h1>🎮 RomM</h1>
+  <p>Connect to your self-hosted RomM server</p>
+  <div class="setup-form">
+    <label>Server URL (e.g. http://192.168.1.100:3000)</label>
+    <input type="url" id="server-url" placeholder="http://your-romm-server:3000" />
+
+    <label>Username</label>
+    <input type="text" id="username" autocomplete="username" />
+
+    <label>Password</label>
+    <input type="password" id="password" autocomplete="current-password" />
+
+    <button class="btn" id="connect-btn">Connect</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app">
+  <div id="header">
+    <h1>🎮 RomM</h1>
+    <input type="text" id="search-bar" placeholder="Search ROMs..." />
+    <div id="header-info"></div>
+  </div>
+
+  <div id="breadcrumb">
+    <span id="bc-platform">All Platforms</span>
+  </div>
+
+  <div id="content">
+    <div id="sidebar">
+      <div class="sidebar-item active focused" data-id="all">🕹️ All Platforms</div>
+    </div>
+
+    <div id="grid-container">
+      <div id="grid"></div>
+    </div>
+  </div>
+
+  <div id="status-bar">
+    <span id="status-left">↑↓←→ Navigate  &nbsp; OK Select  &nbsp; ← Back</span>
+    <span id="status-right"></span>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div id="detail-panel">
+  <div class="detail-inner">
+    <div class="detail-cover" id="detail-cover-img">🎮</div>
+    <div class="detail-info">
+      <div class="detail-title" id="detail-title"></div>
+      <div class="detail-platform" id="detail-platform"></div>
+      <div class="detail-meta" id="detail-meta"></div>
+      <div class="detail-actions">
+        <button class="btn" id="detail-download-btn">⬇ Download</button>
+        <button class="btn btn-secondary" id="detail-close-btn">✕ Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loading"><div class="spinner"></div><span id="loading-text">Loading…</span></div>
+
+<!-- Toast -->
+<div id="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
